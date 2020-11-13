@@ -7,22 +7,25 @@ use Illuminate\Http\Request;
 // });
 
 
-use App\Http\Controllers\Api\MainController;
-use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\AuthController;
 
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+
+Route::prefix('/auth')->group(function (){
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+});
 
 Route::prefix('/users')->group(function (){
-    Route::get('/all', [MainController::class, 'getAllUsers']);
-    Route::get('/search', [MainController::class, 'searchUsersByName']);
-    Route::get('/{id}', [MainController::class, 'getUserById'])->where(['id' => '[0-9]+']);
+    Route::get('/all', [UserController::class, 'getAllUsers']);
+    Route::get('/search', [UserController::class, 'searchUsersByName']);
+    Route::get('/{id}', [UserController::class, 'getUserById'])->where(['id' => '[0-9]+']);
 
     Route::group(['middleware' => ['jwt.verify']], function() {
-        Route::post('/add', [MainController::class, 'createUser']);
-        Route::delete('/{id}', [MainController::class, 'deleteUserById'])->where(['id' => '[0-9]+']);
-        Route::put('/{id}', [MainController::class, 'updateUserById'])->where(['id' => '[0-9]+']);
-        Route::post('/refresh', [AuthController::class, 'refresh']);
+        Route::post('/add', [UserController::class, 'createUser']);
+        Route::delete('/{id}', [UserController::class, 'deleteUserById'])->where(['id' => '[0-9]+']);
+        Route::put('/{id}', [UserController::class, 'updateUserById'])->where(['id' => '[0-9]+']);
     });
 });
