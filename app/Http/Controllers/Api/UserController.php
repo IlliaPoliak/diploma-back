@@ -13,33 +13,19 @@ use Illuminate\Pagination\Paginator;
 
 class UserController extends ApiController
 {
-
-    // В юзере этот функционал не нужен!
-    public function createUser(Request $request) {
-        $rules = [
-            'name' => 'required|min:2|max:50',
-            'email' => 'required|email|string|max:50|unique:users',
-            'password' => 'required|string|min:6|max:50',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
-
-        $user = User::create($request->all());
-
-        return response()->json(['status' => 'success'], 201);
-    }
-
-
+    
     public function getAllUsers (Request $request) {
-        $perPage = request()->input('perPage') ?? 2;
+        $perPage = request()->input('perPage') ?? 10;
         $page = request()->input('page') ?? 1;
         $sort = request()->input('sortByName') ?? 'asc';
+        $search = request()->input('search') ?? '';
 
-        return response()->json(User::orderBy('name', $sort)->paginate($perPage, ['*'], 'page', $page),200);
+        $result = User::orderBy('name', $sort)
+                    ->where('name', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%")
+                    ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($result,200);
     }
 
 
@@ -61,7 +47,8 @@ class UserController extends ApiController
 
         $rules = [
             'name' => 'required|min:2|max:50',
-            'email' => 'required|string|min:1|max:50|unique:main_models'
+            'email' => 'required|email|min:1|max:50',
+            'role' => 'required|string'
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -70,7 +57,7 @@ class UserController extends ApiController
             return response()->json($validator->errors(), 400);
         }
 
-        User::find($id)->update($request->all());
+        $user->update($request->all());
 
         return response()->json(['status' => 'success'], 202);
     }
@@ -85,12 +72,5 @@ class UserController extends ApiController
         $user = User::find($id)->delete();
 
         return response()->json(['status' => 'success'], 202);
-    }
-
-    
-    public function searchUsersByName (Request $request){
-        $text = $request->input('text');
-
-        return response()->json(User::where('name', 'like', "%$text%")->get(), 200);
     }
 }

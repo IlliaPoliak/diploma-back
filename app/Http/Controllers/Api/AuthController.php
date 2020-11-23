@@ -26,13 +26,14 @@ class AuthController extends ApiController
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
+            'role' => 'user',
             'password' => Hash::make($request->input('password')),
         ]);
 
         $token = $JWTAuth->fromUser($user);
 
         return response()->json([
-            'status' => 'ok',
+            'status' => 'success',
             'token' => $token
         ], 201);
     }
@@ -45,5 +46,17 @@ class AuthController extends ApiController
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 401);
         }
         return response()->json(['token' => $token], 200);
+    }
+
+    public function me()
+    {
+        return response()->json(auth()->user());
+    }
+
+    public function logout()
+    {
+        auth()->logout();
+
+        return response()->json(['status' => 'success']);
     }
 }
